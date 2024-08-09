@@ -1,8 +1,8 @@
-#include "httprequest.h"
-
 #include <stdio.h>
 #include <string.h>
 #include <err.h>
+
+#include "httprequest.h"
 
 int convert_request(HTTPRequest* request, char request_buffer[BUFFER_SIZE]) {
     char *saveptr, *header_line;
@@ -54,9 +54,10 @@ int uri_verification(char* path) {
         if (path[i] == '.') { period_count++; }
     }
 
-    if (period_count < 1) { warnx("URI doesn't have enough periods"); return 400; } // Return 400 if path doesn't contain any periods
-    if (strstr(path, "..") != NULL) { warnx("URI contains \"..\""); return 400; }   // Return 400 if path contains ".."
-    if ((int) strlen(path) > 128) { warnx("URI is >128 characters"); return 400; }  // Return 400 if path is >128 chars
+    if (period_count < 1) { warnx("URI doesn't have enough periods"); return 400; }           // Return 400 if path doesn't contain any periods
+    if (strstr(path, "..") != NULL) { warnx("URI contains \"..\""); return 400; }             // Return 400 if path contains ".."
+    if (strcmp(path, "/.gitignore") == 0) { warnx("URI cannot be gitignore"); return 400; }   // Return 400 if path is .gitignore
+    if ((int) strlen(path) > 128) { warnx("URI is >128 characters"); return 400; }            // Return 400 if path is >128 chars
 
     return 200;
 }

@@ -3,9 +3,9 @@ CFLAGS = -Wall -Werror -Wextra -pedantic
 
 TARGET  = httpserver
 
-SOURCES = $(SRC)/httpserver.c $(SRC)/bind.c $(SRC)/httprequest.c $(SRC)/httphandle.c
-HEADERS = $(SRC)/bind.h $(SRC)/httprequest.h $(SRC)/httphandle.h
-OBJECTS = $(OBJ)/httpserver.o $(OBJ)/bind.o $(OBJ)/httprequest.o $(OBJ)/httphandle.o
+SOURCES = $(SRC)/httpserver.c $(SRC)/bind.c $(SRC)/httprequest.c $(SRC)/httphandle.c $(SRC)/logger.c
+HEADERS = $(SRC)/bind.h $(SRC)/httprequest.h $(SRC)/httphandle.h $(SRC)/logger.h
+OBJECTS = $(OBJ)/httpserver.o $(OBJ)/bind.o $(OBJ)/httprequest.o $(OBJ)/httphandle.o $(OBJ)/logger.o
 
 SRC = src
 OBJ = obj
@@ -25,6 +25,9 @@ obj/httprequest.o: $(SRC)/httprequest.c $(SRC)/httprequest.h
 
 obj/httphandle.o: $(SRC)/httphandle.c $(SRC)/httphandle.h
 	$(CC) $(CFLAGS) -c $(SRC)/httphandle.c -o $(OBJ)/httphandle.o
+
+obj/logger.o: $(SRC)/logger.c $(SRC)/logger.h
+	$(CC) $(CFLAGS) -c $(SRC)/logger.c -o $(OBJ)/logger.o
 
 
 clean:

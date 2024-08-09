@@ -1,7 +1,7 @@
-#include "bind.h"
-
 #include <string.h>
 #include <arpa/inet.h>
+
+#include "bind.h"
 
 int create_listen_socket(uint16_t port) {
     if (port == 0) return -1;

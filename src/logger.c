@@ -1,12 +1,14 @@
-#include "logger.h"
-
 #include <stdio.h>
+#include <stdlib.h>
 #include <time.h>
 #include <string.h>
 
-/*
+#include "logger.h"
+
+#define MAX_CAPACITY 16
+
 typedef struct {
-    char content[256];
+    char content[256]; // Constructed text to be added to logfile
 } Log;
 
 typedef struct {
@@ -16,7 +18,20 @@ typedef struct {
     int head;                    // Index of head Log
     int back;                    // Index of back log
 } Logger;
-*/
+
+/* Function that queues content into logger in a thread safe manner.
+ * 
+ * Params: Log* log - log to be added to elements array
+ * Returns: void
+ */
+void queue_log(Log*); // This is where worker threads queue text to be logged
+
+/* Function that commits logger elements to logfile in a thread safe manner.
+ * 
+ * Params: none
+ * Returns: void
+ */
+void write_log(); // This is where logger thread will endlessly loop trying to write to logfile
 
 Logger* logger;
 FILE*  logfile;
@@ -52,7 +67,7 @@ void free_logger() {
 }
 
 void queue_log(Log* log) {
-
+    (void) log;
 }
 
 void write_log() {
