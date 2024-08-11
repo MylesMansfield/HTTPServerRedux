@@ -8,12 +8,13 @@
 #include <string.h>
 #include <err.h>
 #include <sys/socket.h>
+#include <pthread.h>
 
 /* httpserver.c */
 int main(int argc, char** argv) {
     if (argc == 1) { warnx("Usage: ./httpserver [-t threads] [-l logfile] <port>"); return 1; }
 
-    char file_name[128] = "";
+    char file_name[128] = "logfile.txt";
     int workerCount = 4;
     int opt;
 
@@ -34,15 +35,18 @@ int main(int argc, char** argv) {
 
     if (socket_d < 0) { warnx("Socket Failed to Bind: %d\n", socket_d); return 1; }
 
-    new_logger(file_name);
+    pthread_t logger_thread;
+    pthread_create(&logger_thread, NULL, new_logger, (void*)file_name); // Creates logger thread
 
     // Server loop    
     while (1) {
         int file_d = accept(socket_d, NULL, NULL); // Accept connection
         handle_request(file_d);                    // Handle request
     }
-    
+
+    pthread_join(logger_thread, NULL); // TODO: add signal handling for SIGINT where upon interrupt our logger contents are logged then gracefully freed
     free_logger();
+
     close(socket_d);
     return 0;
 }

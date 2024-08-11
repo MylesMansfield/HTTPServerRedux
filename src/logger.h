@@ -10,5 +10,5 @@ void new_log(char*); // This is where worker threads turn response into log and 
  * Params: char* filename - given name for logfile, default is stderr if invalid 
  * Returns: void
  */
-void new_logger(char*);
+void* new_logger(void*);
 void free_logger();

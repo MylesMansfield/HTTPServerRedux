@@ -80,8 +80,12 @@ void handle_request(int file_d) {
 
     printf("%s %s %s\n", request->method, request->path, request->version);
     printf("STATUS CODE: %d\n\n", code);
-    free(request);
     handle_response(file_d, code); // Handles response appropriately
+
+    char log[200];
+    sprintf(log, " - %s %s %d\n", request->method, request->path, code);
+    new_log(log); // Queues log for logger (will hang if no room is available yet)
+    free(request);
 }
 
 int handle_head(HTTPRequest* request, int file_d) {
