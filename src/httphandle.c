@@ -5,6 +5,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <err.h>
+#include <sys/file.h>
 
 #include "httphandle.h"
 #include "logger.h"
@@ -54,7 +55,7 @@ void handle_request(int file_d) {
     int code = 200;
 
     // Read request + headers
-    read(file_d, request_buffer, BUFFER_SIZE);
+    if (read(file_d, request_buffer, BUFFER_SIZE) < 0) { code = 500; }
 
     // Convert network request to HTTPRequest object
     HTTPRequest* request = malloc(sizeof(HTTPRequest));
@@ -67,8 +68,6 @@ void handle_request(int file_d) {
     if (code == 200 && strcmp(request->version,"HTTP/1.1") == 0) { // Is version valid
         if (strcmp(request->method,"GET") == 0) {
             code = handle_get(request, file_d);
-        } else if (strcmp(request->method,"HEAD") == 0) {
-            code = handle_head(request, file_d);
         } else if (strcmp(request->method,"PUT") == 0) {
             code = handle_put(request, file_d);
         } else if (strcmp(request->method,"DELETE") == 0) {
@@ -123,9 +122,6 @@ int handle_head(HTTPRequest* request, int file_d) {
 int handle_get(HTTPRequest* request, int file_d) {
     char path[138] = "serverdir"; // 138 b/c 128 max length path + length of "serverdir" + path + '\0' at end
     strcat(path, request->path);
-    
-    int code = handle_head(request, file_d);
-    if (code != 200) { return code; } // Return code from handle_head() if failure
 
     int get_fd = open(path, O_RDONLY);
     if (get_fd == -1) {
@@ -134,6 +130,11 @@ int handle_get(HTTPRequest* request, int file_d) {
         else { return 500; }                      // Failed b/c other
     }
 
+    flock(get_fd, LOCK_SH);
+
+    int code = handle_head(request, file_d);
+    if (code != 200) { return code; } // Return code from handle_head() if failure
+
     char response[BUFFER_SIZE] = "";
     int len_read = 0;
 
@@ -141,6 +142,7 @@ int handle_get(HTTPRequest* request, int file_d) {
         write(file_d, response, len_read);
     }
     
+    flock(get_fd, LOCK_UN);
     close(get_fd);
     return 200;
 }
@@ -162,6 +164,8 @@ int handle_put(HTTPRequest* request, int file_d) {
 
     write(file_d, code_100, strlen(code_100)); // Respond with 100 confirmation
 
+    flock(put_fd, LOCK_EX);
+
     char buffer[BUFFER_SIZE] = "";
     int len_read = 0, len_copied = 0;
 
@@ -171,6 +175,8 @@ int handle_put(HTTPRequest* request, int file_d) {
         len_copied += len_read;
         if (len_copied >= request->content_length) { break; }
     }
+
+    flock(put_fd, LOCK_UN);
     close(put_fd);
 
     if (code == 200) { write(file_d, code_200, strlen(code_200)); }

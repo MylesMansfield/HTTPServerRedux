@@ -1,5 +1,5 @@
 #include "bind.h"
-#include "httphandle.h"
+#include "threadpool.h"
 #include "logger.h"
 
 #include <stdlib.h>
@@ -15,20 +15,18 @@ int main(int argc, char** argv) {
     if (argc == 1) { warnx("Usage: ./httpserver [-t threads] [-l logfile] <port>"); return 1; }
 
     char file_name[128] = "logfile.txt";
-    int workerCount = 4;
+    int worker_count = 4;
     int opt;
 
     while ((opt = getopt(argc, argv, "l:t:")) != -1) {
         switch (opt) {
-            case 't': workerCount = atoi(optarg); break;
+            case 't': worker_count = atoi(optarg); break;
             case 'l': strcpy(file_name, optarg); break;
             default: warnx("Usage: ./httpserver [-t threads] [-l logfile] <port>"); return 1;
         }
     }
-    
-    
-    (void) workerCount; // TEMP TO REMOVE WARNING
-    
+
+    if (worker_count > 7) { warnx("Max worker thread capacity of 7 exceeded"); return 1; }
 
     const uint16_t port = atoi(argv[argc - 1]);
     int socket_d = create_listen_socket(port); // Open socket
@@ -38,14 +36,17 @@ int main(int argc, char** argv) {
     pthread_t logger_thread;
     pthread_create(&logger_thread, NULL, new_logger, (void*)file_name); // Creates logger thread
 
+    create_pool(worker_count); // Creates threadpool with worker_count number of threads
+    
     // Server loop    
     while (1) {
         int file_d = accept(socket_d, NULL, NULL); // Accept connection
-        handle_request(file_d);                    // Handle request
+        queue_pool(file_d);                        // Handle request
     }
 
     pthread_join(logger_thread, NULL); // TODO: add signal handling for SIGINT where upon interrupt our logger contents are logged then gracefully freed
     free_logger();
+    free_pool();
 
     close(socket_d);
     return 0;

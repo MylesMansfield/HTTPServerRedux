@@ -13,19 +13,36 @@ typedef struct {
 } Log;
 
 typedef struct {
-    int capacity;                // Max capacity of 
+    int capacity;                // Max capacity of queue
     int size;                    // Number of node elements
     Log* elements[MAX_CAPACITY]; // Log* array of size capacity holding logs
     int head;                    // Index of head log
     int back;                    // Index of back log
     pthread_mutex_t mutex;       // Mutex lock used for buffer modification
-    pthread_cond_t more;         // Thread signal for when more have been added
-    pthread_cond_t less;         // Thread signal for when an item has been removed
+    pthread_cond_t more;         // Thread signal for when more logs have been added
+    pthread_cond_t less;         // Thread signal for when a log has been removed
 } Logger;
 
-void queue_log(char*);     // This is where worker threads queue text to be logged
-void write_log();          // This is where logger thread tries to write to logfile
-void handle_consumption(); // This is where the logger loops to endlessly consume from the buffer
+/* Function that queues content into logger in a thread safe manner.
+ * 
+ * Params: Log* log - log to be added to elements array
+ * Returns: void
+ */
+void queue_log(char*);
+
+/* Function that commits logger elements to logfile in a thread safe manner.
+ * 
+ * Params: none
+ * Returns: void
+ */
+void write_log();
+
+/* Function that loops to empty buffer until interrupt.
+ * 
+ * Params: none
+ * Returns: void
+ */
+void handle_consumption();
 
 Logger* logger;
 FILE*  logfile;
@@ -76,43 +93,27 @@ void free_logger() {
     if (strcmp(logfile_f, "stderr") != 0) { fclose(logfile); }
 }
 
-/* Function that queues content into logger in a thread safe manner.
- * 
- * Params: Log* log - log to be added to elements array
- * Returns: void
- */
 void queue_log(char* log) {
     pthread_mutex_lock(&logger->mutex);
    
-    while (logger->size >= logger->capacity) { // If full wait for removed item signal (less)
+    while (logger->size >= logger->capacity) {
         pthread_cond_wait(&logger->less, &logger->mutex);
     }
 
     strcpy(logger->elements[logger->back++]->content, log); // Insert contents of log into back index of elements
-
-    logger->back %= logger->capacity; // Update back element index
+    logger->back %= logger->capacity;
     logger->size++;
 
     pthread_cond_signal(&logger->more);
     pthread_mutex_unlock(&logger->mutex);
 }
 
-/* Function that loops to empty buffer until interrupt.
- * 
- * Params: none
- * Returns: void
- */
 void handle_consumption() {
     while (1) { // TODO: Maybe while bool hasn't been touched by interrupt handler || buffer still has contents (potential for race condition if writing to buffer is slower than consumption)
         write_log();
     }
 }
 
-/* Function that commits logger elements to logfile in a thread safe manner.
- * 
- * Params: none
- * Returns: void
- */
 void write_log() {
     char log[256] = "UHOH";
 
