@@ -1,7 +1,3 @@
-#include "bind.h"
-#include "threadpool.h"
-#include "logger.h"
-
 #include <stdlib.h>
 #include <unistd.h>
 #include <getopt.h>
@@ -9,6 +5,13 @@
 #include <err.h>
 #include <sys/socket.h>
 #include <pthread.h>
+#include <signal.h>
+#include <poll.h>
+
+#include "bind.h"
+#include "threadpool.h"
+#include "logger.h"
+#include "interrupthandler.h"
 
 /* httpserver.c */
 int main(int argc, char** argv) {
@@ -36,18 +39,30 @@ int main(int argc, char** argv) {
     pthread_t logger_thread;
     pthread_create(&logger_thread, NULL, new_logger, (void*)file_name); // Creates logger thread
 
-    create_pool(worker_count); // Creates threadpool with worker_count number of threads
+    create_pool(worker_count);     // Creates threadpool with worker_count number of threads
+
+    signal(SIGINT, handle_sigint); // Setup SIGINT handler
     
     // Server loop    
-    while (1) {
-        int file_d = accept(socket_d, NULL, NULL); // Accept connection
-        queue_pool(file_d);                        // Handle request
+    while (interrupted == 0) {
+        int file_d;
+        struct pollfd fds[1];      
+        fds[0].fd = socket_d;
+        fds[0].events = POLLIN;
+
+        int poll_val = poll(fds, 1, 1);
+
+        if (poll_val <= 0) { continue; }
+
+        file_d = accept(socket_d, NULL, NULL); // Accept connection
+        if (file_d != -1) {
+            queue_pool(file_d);                // Handle request
+        } 
     }
 
-    pthread_join(logger_thread, NULL); // TODO: add signal handling for SIGINT where upon interrupt our logger contents are logged then gracefully freed
     free_logger();
     free_pool();
-
     close(socket_d);
+
     return 0;
 }

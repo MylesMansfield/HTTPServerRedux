@@ -3,9 +3,9 @@ CFLAGS = -Wall -Werror -Wextra -pedantic
 
 TARGET  = httpserver
 
-SOURCES = $(SRC)/httpserver.c $(SRC)/bind.c $(SRC)/httprequest.c $(SRC)/httphandle.c $(SRC)/logger.c $(SRC)/threadpool.c
-HEADERS = $(SRC)/bind.h $(SRC)/httprequest.h $(SRC)/httphandle.h $(SRC)/logger.h $(SRC)/threadpool.h
-OBJECTS = $(OBJ)/httpserver.o $(OBJ)/bind.o $(OBJ)/httprequest.o $(OBJ)/httphandle.o $(OBJ)/logger.o $(OBJ)/threadpool.o
+SOURCES = $(SRC)/httpserver.c $(SRC)/bind.c $(SRC)/httprequest.c $(SRC)/httphandle.c $(SRC)/logger.c $(SRC)/threadpool.c $(SRC)/interrupthandler.c
+HEADERS = $(SRC)/bind.h $(SRC)/httprequest.h $(SRC)/httphandle.h $(SRC)/logger.h $(SRC)/threadpool.h $(SRC)/interrupthandler.h
+OBJECTS = $(OBJ)/httpserver.o $(OBJ)/bind.o $(OBJ)/httprequest.o $(OBJ)/httphandle.o $(OBJ)/logger.o $(OBJ)/threadpool.o $(OBJ)/interrupthandler.o
 
 SRC = src
 OBJ = obj
@@ -31,6 +31,9 @@ obj/logger.o: $(SRC)/logger.c $(SRC)/logger.h
 
 obj/threadpool.o: $(SRC)/threadpool.c $(SRC)/threadpool.h
 	$(CC) $(CFLAGS) -c $(SRC)/threadpool.c -o $(OBJ)/threadpool.o
+
+obj/interrupthandler.o: $(SRC)/interrupthandler.c $(SRC)/interrupthandler.h
+	$(CC) $(CFLAGS) -c $(SRC)/interrupthandler.c -o $(OBJ)/interrupthandler.o
 
 
 clean:

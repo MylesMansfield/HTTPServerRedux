@@ -29,13 +29,6 @@ int handle_get(HTTPRequest*, int);
 int handle_put(HTTPRequest*, int);
 int handle_delete(HTTPRequest*, int);
 
-/* Function that responds to user with appropriate message.
- * 
- * Params: int file_d - file descriptor of user
- *         int code   - status code that the server is to respond with
- * 
- * Returns: void
- */
 void handle_response(int, int);
 
 const char* get_code_200 = "HTTP/1.1 200 OK\r\nContent-Length: ";
@@ -199,6 +192,13 @@ int handle_delete(HTTPRequest* request, int file_d) {
     return 200;
 }
 
+/* Function that responds to user with appropriate message.
+ * 
+ * Params: int file_d - file descriptor of user
+ *         int code   - status code that the server is to respond with
+ * 
+ * Returns: void
+ */
 void handle_response(int file_d, int code) {
     if(code == 200 || code == 201) {} // Already handled
     else if (code == 400) { write(file_d, code_400, strlen(code_400)); }

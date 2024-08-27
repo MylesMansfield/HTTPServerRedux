@@ -1,10 +1,10 @@
 #include <stdlib.h>
 #include <pthread.h>
-
 #include <stdio.h>
 
 #include "threadpool.h"
 #include "httphandle.h"
+#include "interrupthandler.h"
 
 #define MAX_CAPACITY 7
 
@@ -20,11 +20,6 @@ typedef struct {
     pthread_cond_t less;             // Thread signal for when a descriptor has been removed
 } Threadpool;
 
-/* Function that every worker thread runs which loops till interrupt trying to dequeue the next element from elements.
- * 
- * Params: none
- * Returns: void
- */
 void* dequeue_pool();
 
 Threadpool* pool;
@@ -43,10 +38,6 @@ void create_pool(int worker_count) {
 }
 
 void free_pool() {
-    for (int i = 0; i < pool->capacity; i++) {
-        pthread_join(pool->workers[i], NULL); // This relies on the workers to know when to kill themselves. SIGINT handling becomes more important the further I go.
-    }
-    
     free(pool);
 }
 
@@ -65,10 +56,16 @@ void queue_pool(int file_d) {
     pthread_mutex_unlock(&pool->mutex);
 }
 
+/* Function that every worker thread runs which loops till interrupt trying to dequeue the next element from elements.
+ * 
+ * Params: none
+ * Returns: void
+ */
 void* dequeue_pool() {
     pthread_t thread_num = pthread_self();
     printf("Started Worker %lu\n\n", thread_num);
-    while (1) {
+
+    while (pool->size > 0 || interrupted == 0) {
         pthread_mutex_lock(&pool->mutex);
 
         while(pool->size <= 0) {
@@ -85,4 +82,5 @@ void* dequeue_pool() {
         // Handle request on file_d
         handle_request(file_d);
     }
+    return NULL;
 }
