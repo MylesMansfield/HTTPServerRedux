@@ -1,5 +1,5 @@
 # Basic Multithreaded HTTP server
-Multithreaded HTTP server supporting: GET, PUT, and DELETE, supports multiple connections at once and logs replies.<br />
+Multithreaded HTTP server supporting: GET, PUT, and DELETE, supports multiple connections at once and logs replies.
 Loosely follows the HTTP 1.1 standard: https://www.w3.org/Protocols/rfc2616/rfc2616.html.
 
 Usage: ./httpserver [-t threads] [-l logfile] [port]<br />
