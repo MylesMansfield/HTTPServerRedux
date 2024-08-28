@@ -11,7 +11,7 @@
 #include "logger.h"
 #include "httprequest.h"
 
-/* Function that responds to HEAD requests(used by GET aswell). Returns the headers of a GET call.
+/* Function that responds to HEAD requests(used by GET exclusively). Returns the headers of a GET call.
  * Function that responds to GET requests. Returns the contents of file at path.
  * Function that responds to PUT requests. Replaces content of file at path or creates new file if it doesn't already exist.
  * Function that responds to DELETE requests. Deletes the file at path if it exists.
@@ -72,6 +72,7 @@ void handle_request(int file_d) {
 
     printf("%s %s %s\n", request->method, request->path, request->version);
     printf("STATUS CODE: %d\n\n", code);
+    fflush(stdout);
     handle_response(file_d, code); // Handles response appropriately
 
     char log[200];

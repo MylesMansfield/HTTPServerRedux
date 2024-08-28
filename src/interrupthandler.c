@@ -8,4 +8,5 @@ int interrupted = 0;
 void handle_sigint() {
     interrupted = 1;
     printf("\n");
+    fflush(stdout);
 }

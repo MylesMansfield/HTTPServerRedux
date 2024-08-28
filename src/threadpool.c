@@ -62,8 +62,8 @@ void queue_pool(int file_d) {
  * Returns: void
  */
 void* dequeue_pool() {
-    pthread_t thread_num = pthread_self();
-    printf("Started Worker %lu\n\n", thread_num);
+    printf("Started Worker\n\n");
+    fflush(stdout);
 
     while (pool->size > 0 || interrupted == 0) {
         pthread_mutex_lock(&pool->mutex);
